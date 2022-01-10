@@ -1,9 +1,13 @@
 use std::collections::HashMap;
+use itertools::Itertools;
 
+// More details on https://rosalind.info/problems/ba1a/
 pub fn count_pattern(text: &str, pattern: &str) -> u32 {
   let mut count = 0;
   let num = pattern.len();
   let length = text.len();
+
+  // println!("Length: {}/{}", length, num);
 
   for (idx, _) in text.chars().enumerate() {
     let max_len = idx + num;
@@ -18,30 +22,35 @@ pub fn count_pattern(text: &str, pattern: &str) -> u32 {
   return count;
 }
 
-pub fn find_max_value(word_map: &HashMap<&str, usize>) -> String {
+fn find_max_value(word_map: &HashMap<&str, usize>) -> Vec<String> {
   // It return different value when several word have the same frequency.
   // Returning String is better than returning &str.
   let mut max_value = 0;
-  let mut key = "";
+  let mut keys = Vec::new();
 
-  for (&k, &v) in word_map.iter() {
+  for (_, &v) in word_map.iter() {
     if v > max_value {
       max_value = v;
-      key = k;
     }
   }
 
-  return String::from(key);
+  for (&k, &v) in word_map.iter() {
+    if v == max_value {
+      keys.push(String::from(k));
+    }
+  }
+
+  return keys;
 }
 
-pub fn find_frequent_word(text: &str, k: usize) -> String {
+fn count_kmer(text: &str, klen: usize) -> HashMap<&str, usize> {
   let mut word_map: HashMap<&str, usize> = HashMap::new();
   let length = text.len();
 
   for (idx, _) in text.chars().enumerate() {
     let mut count = 0;
-    if idx + k < length {
-      let kmer = &text[idx..(idx + k)];
+    if idx + klen < length {
+      let kmer = &text[idx..(idx + klen)];
       match word_map.get(kmer) {
         Some(value) => {
           count = value + 1;
@@ -55,31 +64,62 @@ pub fn find_frequent_word(text: &str, k: usize) -> String {
     }
   }
 
+  return word_map;
+}
+
+pub fn find_frequent_word(text: &str, klen: usize) -> Vec<String> {
+  let word_map = count_kmer(text, klen);
+
   return find_max_value(&word_map);
 }
 
-pub fn reverse_complement(text: &str) -> String {
-  let mut reversed_text = String::from("");
+pub fn complement(text: &str) -> String {
+  let mut complement_text = String::from("");
 
   for (_, character) in text.chars().enumerate() {
     match character.to_ascii_uppercase() {
       'A' => {
-        reversed_text.push_str("T");
+        complement_text.push_str("T");
       }
       'T' => {
-        reversed_text.push_str("A");
+        complement_text.push_str("A");
       }
       'C' => {
-        reversed_text.push_str("G");
+        complement_text.push_str("G");
       }
       'G' => {
-        reversed_text.push_str("C");
+        complement_text.push_str("C");
       }
       _ => {}
     }
   }
 
-  reversed_text
+  complement_text
+}
+
+pub fn reverse_complement(text: &str) -> String {
+  let len = text.len();
+  let mut reversed_text = vec![String::from(""); len];
+
+  for (idx, character) in text.chars().enumerate() {
+    match character.to_ascii_uppercase() {
+      'A' => {
+        reversed_text[len - idx - 1] = String::from("T");
+      }
+      'T' => {
+        reversed_text[len - idx - 1] = String::from("A");
+      }
+      'C' => {
+        reversed_text[len - idx - 1] = String::from("G");
+      }
+      'G' => {
+        reversed_text[len - idx - 1] = String::from("C");
+      }
+      _ => {}
+    }
+  }
+
+  reversed_text.join("")
 }
 
 pub fn find_pattern(text: &str, pattern: &str) -> Vec<usize> {
@@ -101,6 +141,36 @@ pub fn find_pattern(text: &str, pattern: &str) -> Vec<usize> {
   }
 
   return index_vec;
+}
+
+fn find_pattern_by_freq(text: &str, klen: usize, nums: usize) -> Vec<String> {
+  let word_map = count_kmer(text, klen);
+  let mut keys = Vec::new();
+
+  for (&k, &v) in word_map.iter() {
+    if v >= nums {
+      keys.push(String::from(k));
+    }
+  }
+
+  return keys;
+}
+
+// More details on https://rosalind.info/problems/ba1e/
+pub fn find_clump(text: &str, window_size: usize, len: usize, nums: usize) -> Vec<String> {
+  let seq_len = text.len();
+  let mut keys = Vec::new();
+
+  for (idx, _) in text.chars().enumerate() {
+    if idx + window_size <= seq_len && len <= window_size {
+      let window_text = &text[idx..(idx + window_size)];
+      keys.push(find_pattern_by_freq(window_text, len, nums));
+    }
+  }
+
+  let uniq_keys = keys.concat().into_iter().unique().collect();
+
+  return uniq_keys;
 }
 
 pub fn min_skew(text: &str, start: usize) -> Vec<Vec<i32>> {

@@ -226,3 +226,37 @@ pub fn min_skew(text: &str, start: usize) -> Vec<Vec<i32>> {
     return vec![];
   }
 }
+
+// TODO: It will be failed, when the length of str2 is larger than the str1.
+pub fn hamming_distance(str1: &str, str2: &str) -> usize {
+  let mut distance = 0;
+
+  for (index, c) in str1.chars().enumerate() {
+    if c.to_string() != str2[index..index+1] {
+      distance += 1;
+    }
+  }
+
+  return distance;
+}
+
+pub fn count_pattern_with_mismatches(text: &str, pattern: &str, d: usize) -> Vec<usize> {
+  let mut count = 0;
+  let num = pattern.len();
+  let length = text.len();
+  let mut start_poses: Vec<usize> = vec![];
+
+  // println!("Length: {}/{}", length, num);
+
+  for (idx, _) in text.chars().enumerate() {
+    let max_len = idx + num;
+    if max_len < length {
+      match hamming_distance(&text[idx..(idx + num)], pattern) <= d {
+        true => start_poses.push(idx),
+        _ => continue,
+      }
+    }
+  }
+
+  return start_poses;
+}

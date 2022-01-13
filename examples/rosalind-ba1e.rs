@@ -1,4 +1,4 @@
-use algorithms::bioinformatics::dna_replication;
+use bioinformatics_algorithms::bioinformatics::dna_replication;
 
 #[warn(unused_must_use)]
 fn main() {

@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use itertools::Itertools;
+use std::collections::HashMap;
 
 // More details on https://rosalind.info/problems/ba1a/
 pub fn count_pattern(text: &str, pattern: &str) -> u32 {
@@ -232,7 +232,7 @@ pub fn hamming_distance(str1: &str, str2: &str) -> usize {
   let mut distance = 0;
 
   for (index, c) in str1.chars().enumerate() {
-    if c.to_string() != str2[index..index+1] {
+    if c.to_string() != str2[index..index + 1] {
       distance += 1;
     }
   }
@@ -241,7 +241,6 @@ pub fn hamming_distance(str1: &str, str2: &str) -> usize {
 }
 
 pub fn count_pattern_with_mismatches(text: &str, pattern: &str, d: usize) -> Vec<usize> {
-  let mut count = 0;
   let num = pattern.len();
   let length = text.len();
   let mut start_poses: Vec<usize> = vec![];
@@ -259,4 +258,77 @@ pub fn count_pattern_with_mismatches(text: &str, pattern: &str, d: usize) -> Vec
   }
 
   return start_poses;
+}
+
+pub fn immediate_neighbors(pattern: &str) -> Vec<String> {
+  let mut neighbors: Vec<String> = vec![];
+  neighbors.push(String::from(pattern));
+
+  for (index, char) in pattern.chars().enumerate() {
+    for (_, base) in "ATCG".chars().enumerate() {
+      if base != char {
+        neighbors.push(
+          String::from(&pattern[0..index]) + &base.to_string() + &pattern[index + 1..pattern.len()],
+        );
+      }
+    }
+  }
+
+  return neighbors;
+}
+
+pub fn gen_kmer_patterns(k: usize) -> Vec<String> {
+  let mut patterns: Vec<String> = vec![];
+
+  for i in 0..k {
+    if i == 0 {
+      patterns = vec![
+        String::from("A"),
+        String::from("T"),
+        String::from("C"),
+        String::from("G"),
+      ];
+    } else {
+      let mut temp: Vec<String> = vec![];
+      for item in patterns.iter() {
+        temp.push(String::from(&item[..]) + "A");
+        temp.push(String::from(&item[..]) + "T");
+        temp.push(String::from(&item[..]) + "C");
+        temp.push(String::from(&item[..]) + "G");
+      }
+
+      patterns = temp;
+    }
+  }
+
+  return patterns;
+}
+
+pub fn find_frequent_word_mis(text: &str, k: usize, d: usize) -> Vec<String> {
+  let patterns: Vec<String> = gen_kmer_patterns(k);
+  let mut freq_map: HashMap<&str, usize> = HashMap::new();
+
+  for i in patterns.iter() {
+    for (j, _) in text.chars().enumerate() {
+      if j + k < text.len() {
+        match hamming_distance(&i[..], &text[j..(j + k)]) <= d {
+          true => {
+            let count: usize;
+            match freq_map.get(&i[..]) {
+              Some(value) => {
+                count = value + 1;
+              }
+              None => {
+                count = 1;
+              }
+            }
+            freq_map.insert(&i[..], count);
+          }
+          _ => continue,
+        }
+      }
+    }
+  }
+
+  return find_max_value(&freq_map);
 }

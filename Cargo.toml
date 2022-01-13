@@ -1,5 +1,5 @@
 [package]
-name = "algorithms"
+name = "bioinformatics-algorithms"
 version = "0.1.0"
 authors = ["YJC <yjcyxky@163.com>"]
 edition = "2018"

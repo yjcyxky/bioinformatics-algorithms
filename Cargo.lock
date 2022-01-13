@@ -12,15 +12,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "algorithms"
-version = "0.1.0"
-dependencies = [
- "bio",
- "csv",
- "itertools 0.10.3",
-]
-
-[[package]]
 name = "approx"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -91,6 +82,15 @@ dependencies = [
  "quick-error",
  "regex",
  "strum_macros 0.20.1",
+]
+
+[[package]]
+name = "bioinformatics-algorithms"
+version = "0.1.0"
+dependencies = [
+ "bio",
+ "csv",
+ "itertools 0.10.3",
 ]
 
 [[package]]

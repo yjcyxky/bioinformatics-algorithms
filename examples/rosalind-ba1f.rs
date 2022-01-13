@@ -1,4 +1,4 @@
-use algorithms::bioinformatics::{dna_replication, fasta, util};
+use bioinformatics_algorithms::bioinformatics::{dna_replication, fasta, util};
 
 #[warn(unused_must_use)]
 fn main() {

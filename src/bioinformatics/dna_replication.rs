@@ -434,7 +434,7 @@ pub fn pattern2number(pattern: &str) -> usize {
     "C" => return Ok(1),
     "G" => return Ok(2),
     "T" => return Ok(3),
-    _ => return Err("Cannot identify the base.")
+    _ => return Err("Cannot identify the base."),
   };
 
   if k == 1 {
@@ -442,4 +442,73 @@ pub fn pattern2number(pattern: &str) -> usize {
   } else {
     return 4 * pattern2number(&pattern[0..k - 1]) + base2number(&pattern[k - 1..k]).unwrap();
   }
+}
+
+pub fn number2pattern(number: usize) -> String {
+  let number2base = |number| match number {
+    0 => return Ok("A"),
+    1 => return Ok("C"),
+    2 => return Ok("G"),
+    3 => return Ok("T"),
+    _ => return Err("Cannot identify the base."),
+  };
+
+  if number <= 3 {
+    return number2base(number).unwrap().to_string();
+  } else {
+    let rem = number % 4;
+    let div = number / 4;
+
+    if div <= 3 {
+      return number2base(div).unwrap().to_string() + number2base(rem).unwrap();
+    } else {
+      return number2pattern(div) + number2base(rem).unwrap();
+    }
+  }
+}
+
+pub fn number2kmer_pattern(number: usize, k: usize) -> String {
+  let pattern = number2pattern(number);
+  let gap: i32 = k as i32 - pattern.len() as i32;
+  let rep_a = |num| {
+    let mut str = String::from("A");
+    for _ in 1..num {
+      str += "A";
+    }
+    return str;
+  };
+
+  if gap > 0 {
+    return rep_a(gap) + &pattern[..];
+  } else {
+    return pattern;
+  }
+}
+
+pub fn neighbors(pattern: &str, d: usize) -> Vec<String> {
+  if d == 0 {
+    return vec![pattern.to_string()];
+  }
+
+  if pattern.len() == 1 {
+    return vec![
+      "A".to_string(),
+      "C".to_string(),
+      "G".to_string(),
+      "T".to_string(),
+    ];
+  }
+
+  let mut nb_set: Vec<String> = vec![];
+  let suffix_nb_set = neighbors(&pattern[1..], d);
+  for item in suffix_nb_set.iter() {
+    if hamming_distance(&item[..], &pattern[1..]) < d {
+      for base in ["A", "C", "G", "T"] {
+        nb_set.push(String::from(base) + &item[..]);
+      }
+    } else {
+      nb_set.push(String::from(&pattern[0..1]) + &item[..]);
+    }
+  }
+  return nb_set;
 }

@@ -104,17 +104,17 @@ pub fn gen_kmer_patterns(k: usize) -> Vec<String> {
     if i == 0 {
       patterns = vec![
         String::from("A"),
-        String::from("T"),
         String::from("C"),
         String::from("G"),
+        String::from("T"),
       ];
     } else {
       let mut temp: Vec<String> = vec![];
       for item in patterns.iter() {
         temp.push(String::from(&item[..]) + "A");
-        temp.push(String::from(&item[..]) + "T");
         temp.push(String::from(&item[..]) + "C");
         temp.push(String::from(&item[..]) + "G");
+        temp.push(String::from(&item[..]) + "T");
       }
 
       patterns = temp;
@@ -378,4 +378,68 @@ pub fn find_freq_pattern_misrev(text: &str, k: usize, d: usize) -> HashMap<Strin
   }
 
   return reversed_freq_map;
+}
+
+pub fn compute_freq_array(text: &str, k: usize) -> Vec<usize> {
+  let patterns: Vec<String> = gen_kmer_patterns(k);
+  let mut pattern_map: HashMap<&str, usize> = HashMap::new();
+  let mut frequency = vec![];
+  let length = text.len();
+
+  for item in patterns.iter() {
+    pattern_map.insert(&item[..], 0);
+  }
+
+  for (index, _) in text.chars().enumerate() {
+    let count: usize;
+    if index + k <= length {
+      match pattern_map.get(&text[index..(index + k)]) {
+        Some(value) => {
+          count = value + 1;
+        }
+        None => {
+          count = 1;
+        }
+      }
+
+      pattern_map.insert(&text[index..(index + k)], count);
+    }
+  }
+
+  for item in patterns.iter() {
+    frequency.push(pattern_map.get(&item[..]).unwrap().to_owned());
+  }
+
+  return frequency;
+}
+
+pub fn pattern2number_slow(pattern: &str) -> usize {
+  let k: usize = pattern.len();
+  let pattern_array: Vec<String> = gen_kmer_patterns(k);
+
+  for (idx, item) in pattern_array.iter().enumerate() {
+    if &item[..] == pattern {
+      return idx;
+    }
+  }
+
+  // Never run
+  return pattern_array.len();
+}
+
+pub fn pattern2number(pattern: &str) -> usize {
+  let k: usize = pattern.len();
+  let base2number = |base| match base {
+    "A" => return Ok(0),
+    "C" => return Ok(1),
+    "G" => return Ok(2),
+    "T" => return Ok(3),
+    _ => return Err("Cannot identify the base.")
+  };
+
+  if k == 1 {
+    return base2number(pattern).unwrap();
+  } else {
+    return 4 * pattern2number(&pattern[0..k - 1]) + base2number(&pattern[k - 1..k]).unwrap();
+  }
 }

@@ -380,6 +380,7 @@ pub fn find_freq_pattern_misrev(text: &str, k: usize, d: usize) -> HashMap<Strin
   return reversed_freq_map;
 }
 
+// More details on https://rosalind.info/problems/ba1k/
 pub fn compute_freq_array(text: &str, k: usize) -> Vec<usize> {
   let patterns: Vec<String> = gen_kmer_patterns(k);
   let mut pattern_map: HashMap<&str, usize> = HashMap::new();
@@ -427,6 +428,7 @@ pub fn pattern2number_slow(pattern: &str) -> usize {
   return pattern_array.len();
 }
 
+// More details on https://rosalind.info/problems/ba1l/
 pub fn pattern2number(pattern: &str) -> usize {
   let k: usize = pattern.len();
   let base2number = |base| match base {
@@ -467,6 +469,7 @@ pub fn number2pattern(number: usize) -> String {
   }
 }
 
+// More details on https://rosalind.info/problems/ba1m/
 pub fn number2kmer_pattern(number: usize, k: usize) -> String {
   let pattern = number2pattern(number);
   let gap: i32 = k as i32 - pattern.len() as i32;
@@ -485,6 +488,7 @@ pub fn number2kmer_pattern(number: usize, k: usize) -> String {
   }
 }
 
+// More details on https://rosalind.info/problems/ba1n/
 pub fn neighbors(pattern: &str, d: usize) -> Vec<String> {
   if d == 0 {
     return vec![pattern.to_string()];
@@ -511,4 +515,88 @@ pub fn neighbors(pattern: &str, d: usize) -> Vec<String> {
     }
   }
   return nb_set;
+}
+
+fn is_matched(text: &str, kmer: &str, d: usize) -> bool {
+  let length = kmer.len();
+  for (idx, _) in text.chars().enumerate() {
+    if idx + length <= text.len() {
+      if hamming_distance(&text[idx..(idx + length)], kmer) <= d {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+fn all_is_matched(dna_array: &Vec<&str>, kmer: &str, d: usize) -> bool {
+  for dna in dna_array.iter() {
+    if !is_matched(&dna[..], kmer, d) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+// More details on https://rosalind.info/problems/ba2a/
+pub fn motif_enumeration(dna_array: Vec<&str>, k: usize, d: usize) -> Vec<String> {
+  let freq_patterns = find_freq_pattern_mis(&dna_array[0], k, d);
+  let candidates = freq_patterns.keys();
+  let mut results: Vec<String> = vec![];
+
+  for candidate in candidates {
+    if all_is_matched(&dna_array, &candidate[..], d) {
+      results.push(candidate.clone());
+    }
+  }
+
+  return results;
+}
+
+fn min_distance(text: &str, pattern: &str) -> usize {
+  let mut min: usize = pattern.len();
+  let length = text.len();
+  let k = pattern.len();
+
+  for (idx, _) in text.chars().enumerate() {
+    if (idx + k) <= length {
+      let d = hamming_distance(pattern, &text[idx..idx + k]);
+      if d == 0 {
+        return 0;
+      } else if min > d {
+        min = d;
+      }
+    }
+  }
+
+  return min;
+}
+
+fn sum_distance(dna_array: &Vec<&str>, pattern: &str) -> usize {
+  let mut sum: usize = 0;
+  for dna in dna_array {
+    sum += min_distance(dna, pattern);
+  }
+
+  return sum;
+}
+
+pub fn median_str(dna_array: Vec<&str>, k: usize) -> String {
+  let pattern_array: Vec<String> = gen_kmer_patterns(k);
+  let mut min_sum: usize = dna_array.len() * k;
+  let mut min_pattern = String::from("");
+
+  for pattern in pattern_array {
+    let sum = sum_distance(&dna_array, &pattern[..]);
+    if sum <= min_sum {
+      min_sum = sum;
+      min_pattern = pattern.clone();
+    }
+
+    // println!("Min Distance: {}/{}/{}", &pattern[..], sum, min_sum);
+  }
+
+  return min_pattern;
 }

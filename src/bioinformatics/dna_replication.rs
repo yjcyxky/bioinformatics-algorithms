@@ -613,3 +613,16 @@ pub fn string_composition(text: &str, k: usize) -> Vec<String> {
 
   return kmer_set;
 }
+
+// More details on https://rosalind.info/problems/ba3b/
+pub fn genome_path(dna_array: &[&str]) -> String {
+  let length = dna_array.len();
+  if length == 1 {
+    return dna_array[0].to_string();
+  } else {
+    let path = genome_path(&dna_array[0..length - 1]);
+    let last = dna_array[length - 1];
+    let str_len = last.len();
+    return path + &last[(str_len - 1)..str_len];
+  }
+}

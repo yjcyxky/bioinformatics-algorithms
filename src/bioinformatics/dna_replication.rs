@@ -626,3 +626,20 @@ pub fn genome_path(dna_array: &[&str]) -> String {
     return path + &last[(str_len - 1)..str_len];
   }
 }
+
+// More details on https://rosalind.info/problems/ba3c/
+pub fn overlap_graph(kmers: &[&str]) -> Vec<Vec<String>> {
+  let suffix = |pattern: &str| return pattern[1..].to_string();
+  let prefix = |pattern: &str| return pattern[0..pattern.len() - 1].to_string();
+  let mut results: Vec<Vec<String>> = vec![];
+
+  for (i, kmer) in kmers.iter().enumerate() {
+    for (j, pattern) in kmers.iter().enumerate() {
+      if i != j && suffix(kmer) == prefix(pattern) {
+        results.push(vec![kmer.to_string(), pattern.to_string()]);
+      }
+    }
+  }
+
+  return results;
+}

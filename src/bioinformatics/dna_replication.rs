@@ -600,3 +600,16 @@ pub fn median_str(dna_array: Vec<&str>, k: usize) -> String {
 
   return min_pattern;
 }
+
+pub fn string_composition(text: &str, k: usize) -> Vec<String> {
+  let mut kmer_set: Vec<String> = vec![];
+  let length = text.len();
+
+  for (idx, _) in text.chars().enumerate() {
+    if (idx + k) <= length {
+      kmer_set.push(text[idx..idx + k].to_string());
+    }
+  }
+
+  return kmer_set;
+}

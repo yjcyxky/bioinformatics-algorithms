@@ -676,3 +676,30 @@ pub fn de_bruijn(text: &str, k: usize) -> Vec<Vec<String>> {
 
   return results;
 }
+
+fn de_bruijn_mut(text: &str, k: usize, results: &mut Vec<Vec<String>>) {
+  for (idx, _) in text.chars().enumerate() {
+    if idx + k <= text.len() {
+      let cstr = &text[idx..idx + k - 1];
+      let nstr = &text[idx + 1..idx + k];
+      match results.iter_mut().find(|item| &item[0][..] == cstr) {
+        Some(value) => {
+          value.push(nstr.to_string());
+        }
+        None => {
+          results.push(vec![cstr.to_string(), nstr.to_string()]);
+        }
+      }
+    }
+  }
+}
+
+// More details on https://rosalind.info/problems/ba3e/
+pub fn kmer_de_bruijn(kmers: &Vec<&str>) -> Vec<Vec<String>> {
+  let mut results: Vec<Vec<String>> = vec![];
+  for kmer in kmers {
+    de_bruijn_mut(kmer, kmer.len(), &mut results);
+  }
+
+  return results;
+}

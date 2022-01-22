@@ -1,5 +1,5 @@
 use itertools::Itertools;
-use std::collections::HashMap;
+use std::{collections::HashMap, usize};
 
 fn find_max_value_with_ref(word_map: &HashMap<&str, usize>) -> Vec<String> {
   // It return different value when several word have the same frequency.
@@ -702,4 +702,97 @@ pub fn kmer_de_bruijn(kmers: &Vec<&str>) -> Vec<Vec<String>> {
   }
 
   return results;
+}
+
+pub fn make_graph(adjacent_lst: &Vec<Vec<&str>>) -> HashMap<String, Vec<String>> {
+  let mut graph: HashMap<String, Vec<String>> = HashMap::new();
+  for (_, item) in adjacent_lst.iter().enumerate() {
+    graph.insert(
+      item[0].to_string(),
+      item[1..].iter().map(|item| item.to_string()).collect(),
+    );
+  }
+
+  return graph;
+}
+
+fn find_idx(v: &Vec<usize>, graph: &HashMap<usize, Vec<usize>>) -> i32 {
+  let length = v.len();
+  for idx in 0..length {
+    let index = length - 1 - idx;
+    match graph.get(&v[index]) {
+      Some(_) => {
+        return index as i32;
+      }
+      _ => {}
+    }
+  }
+
+  return -1;
+}
+
+pub fn eulerian_cycle(adjacent_lst: &Vec<Vec<usize>>, start: usize) -> Vec<usize> {
+  let mut cycle: Vec<usize> = vec![start];
+  let mut new_start: usize = start;
+  let mut rest: Vec<usize> = vec![];
+  let mut graph: HashMap<usize, Vec<usize>> = HashMap::new();
+  for (_, item) in adjacent_lst.iter().enumerate() {
+    graph.insert(
+      item[0],
+      item[1..].iter().map(|item| item.to_owned()).collect(),
+    );
+  }
+
+  let find_valid_idx = |items: &Vec<usize>, start: usize| {
+    for (idx, item) in items.iter().enumerate() {
+      if item.to_owned() != start {
+        return idx;
+      }
+    }
+
+    return 0;
+  };
+
+  loop {
+    if !graph.is_empty() {
+      if let Some(value) = graph.get(&new_start) {
+        // It's a cycle but not a finished.
+        if value.len() > 1 {
+          let valid_idx = find_valid_idx(value, start);
+          let end = value[valid_idx];
+          let new_value = value
+            .clone()
+            .into_iter()
+            .filter(|&item| item != end)
+            .collect();
+          graph.insert(new_start, new_value);
+          cycle.push(end);
+          new_start = end;
+        } else {
+          let end = value[0];
+          graph.remove(&new_start);
+          cycle.push(end);
+          new_start = end;
+        }
+      } else {
+        // New Start
+        let idx = find_idx(&cycle, &graph);
+        if rest.len() > 0 {
+          let new_rest = cycle[idx as usize + 1..].iter().map(|&item| item).collect();
+          rest = [new_rest, rest].concat();
+        } else {
+          rest = cycle[idx as usize + 1..].iter().map(|&item| item).collect();
+        }
+        cycle.truncate(idx as usize + 1);
+        new_start = cycle[idx as usize];
+      }
+    } else {
+      if rest.len() > 0 {
+        cycle = [cycle, rest].concat();
+      }
+      break;
+    }
+  }
+
+  return cycle;
 }

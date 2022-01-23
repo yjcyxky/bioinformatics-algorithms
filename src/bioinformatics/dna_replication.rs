@@ -796,3 +796,25 @@ pub fn eulerian_cycle(adjacent_lst: &Vec<Vec<usize>>, start: usize) -> Vec<usize
 
   return cycle;
 }
+
+pub fn compute_degree(adjacent_lst: &Vec<Vec<usize>>) -> HashMap<usize, Vec<usize>> {
+  let mut results: HashMap<usize, Vec<usize>> = HashMap::new();
+  for item in adjacent_lst {
+    let length = item.len();
+    if let Some(v) = results.get_mut(&item[0]) {
+      v[0] = length - 1;
+    } else {
+      results.insert(item[0], vec![length - 1, 0]);
+    }
+
+    for &i in item[1..].iter() {
+      if let Some(v) = results.get_mut(&i) {
+        v[1] += 1;
+      } else {
+        results.insert(i, vec![0, 1]);
+      }
+    }
+  }
+
+  return results;
+}

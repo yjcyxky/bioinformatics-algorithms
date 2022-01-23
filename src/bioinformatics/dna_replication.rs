@@ -777,14 +777,19 @@ pub fn eulerian_cycle(adjacent_lst: &Vec<Vec<usize>>, start: usize) -> Vec<usize
       } else {
         // New Start
         let idx = find_idx(&cycle, &graph);
-        if rest.len() > 0 {
-          let new_rest = cycle[idx as usize + 1..].iter().map(|&item| item).collect();
-          rest = [new_rest, rest].concat();
+        if idx >= 0 {
+          if rest.len() > 0 {
+            let new_rest = cycle[idx as usize + 1..].iter().map(|&item| item).collect();
+            rest = [new_rest, rest].concat();
+          } else {
+            rest = cycle[idx as usize + 1..].iter().map(|&item| item).collect();
+          }
+          cycle.truncate(idx as usize + 1);
+          new_start = cycle[idx as usize];
         } else {
-          rest = cycle[idx as usize + 1..].iter().map(|&item| item).collect();
+          // TODO: Not valid cycle.
+          return cycle;
         }
-        cycle.truncate(idx as usize + 1);
-        new_start = cycle[idx as usize];
       }
     } else {
       if rest.len() > 0 {
@@ -822,15 +827,15 @@ pub fn compute_degree(adjacent_lst: &Vec<Vec<usize>>) -> HashMap<usize, Vec<usiz
 pub fn eulerian_path(adjacent_lst: &Vec<Vec<usize>>) -> Vec<usize> {
   let degree = compute_degree(adjacent_lst);
   let mut start: usize = 0;
-  let mut end: usize = 0;
+  // let mut end: usize = 0;
   for (k, v) in degree {
     if v[0] > v[1] {
       start = k;
     }
 
-    if v[0] < v[1] {
-      end = k;
-    }
+    // if v[0] < v[1] {
+    //   end = k;
+    // }
   }
 
   return eulerian_cycle(&adjacent_lst, start);
@@ -843,10 +848,10 @@ pub struct Graph {
 }
 
 impl Graph {
-  pub fn new(nodes: Vec<String>, edges: Vec<Vec<usize>>) -> Graph {
+  pub fn new() -> Graph {
     Graph {
-      nodes: nodes,
-      edges: edges,
+      nodes: vec![],
+      edges: vec![],
     }
   }
 
@@ -856,6 +861,48 @@ impl Graph {
 
   pub fn get_nodes(&self) -> Vec<String> {
     return self.nodes.clone();
+  }
+
+  fn find_node(&self, node: &str) -> i32 {
+    for (i, v) in self.nodes.iter().enumerate() {
+      if &v[..] == node {
+        return i as i32;
+      }
+    }
+
+    return -1;
+  }
+
+  fn find_edge(&self, start: usize) -> i32 {
+    for (i, v) in self.edges.iter().enumerate() {
+      if v[0] == start {
+        return i as i32;
+      }
+    }
+
+    return -1;
+  }
+
+  fn add_node(&mut self, node: &str) -> usize {
+    let idx = self.find_node(node);
+    if idx >= 0 {
+      return idx as usize;
+    } else {
+      self.nodes.push(node.to_string());
+      return self.nodes.len() - 1;
+    }
+  }
+
+  pub fn add_edge(&mut self, start: &str, end: &str) {
+    let start_idx = self.add_node(start);
+    let end_idx = self.add_node(end);
+
+    let edge_idx = self.find_edge(start_idx);
+    if edge_idx >= 0 {
+      self.edges[edge_idx as usize].push(end_idx);
+    } else {
+      self.edges.push(vec![start_idx, end_idx]);
+    }
   }
 
   pub fn output_text(&self, k: usize) -> String {
@@ -871,60 +918,29 @@ impl Graph {
 }
 
 pub fn de_bruijn_graph(patterns: &Vec<&str>, k: usize) -> Graph {
-  let mut nodes: Vec<String> = vec![];
-  let mut edges: Vec<Vec<usize>> = vec![];
-
-  let find_idx = |v: &Vec<String>, item: &str| -> i32 {
-    for (i, v) in v.iter().enumerate() {
-      if &v[..] == item {
-        return i as i32;
-      }
-    }
-
-    return -1;
-  };
-
-  let find_idx_in_adjacent_lst = |v: &Vec<Vec<usize>>, item: usize| -> i32 {
-    for (i, v) in v.iter().enumerate() {
-      if v[0] == item {
-        return i as i32;
-      }
-    }
-
-    return -1;
-  };
+  let mut graph = Graph::new();
 
   for &pattern in patterns {
     let prefix = &pattern[0..k - 1];
     let suffix = &pattern[1..];
-    let prefix_idx = find_idx(&nodes, prefix);
-    let suffix_idx = find_idx(&nodes, suffix);
-
-    if prefix_idx >= 0 {
-      if suffix_idx < 0 {
-        nodes.push(suffix.to_string());
-        edges.push(vec![prefix_idx as usize, nodes.len() - 1]);
-      } else {
-        let edge_idx = find_idx_in_adjacent_lst(&edges, prefix_idx as usize);
-        if edge_idx >= 0 {
-          edges[edge_idx as usize].push(suffix_idx as usize);
-        } else {
-          edges.push(vec![prefix_idx as usize, suffix_idx as usize]);
-        }
-      }
-    } else {
-      if suffix_idx < 0 {
-        nodes.push(prefix.to_string());
-        nodes.push(suffix.to_string());
-        let length = nodes.len();
-        edges.push(vec![length - 2, length - 1]);
-      } else {
-        nodes.push(prefix.to_string());
-        edges.push(vec![nodes.len() - 1, suffix_idx as usize]);
-      }
-    }
+    graph.add_edge(prefix, suffix);
   }
 
-  let graph = Graph::new(nodes, edges);
   return graph;
+}
+
+pub fn gen_k_universal_patterns(k: usize) -> Vec<String> {
+  let mut patterns: Vec<String> = vec![];
+
+  for i in 0..(2 as usize).pow(k as u32) {
+    patterns.push(format!("{:0width$b}", i, width=k));
+  }
+
+  return patterns;
+}
+
+pub fn k_universal_cycle(k: usize) -> String {
+  let patterns = gen_k_universal_patterns(k);
+  let graph = de_bruijn_graph(&patterns.iter().map(|item| &item[..]).collect(), k);
+  return graph.output_text(k);
 }

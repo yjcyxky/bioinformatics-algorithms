@@ -818,3 +818,113 @@ pub fn compute_degree(adjacent_lst: &Vec<Vec<usize>>) -> HashMap<usize, Vec<usiz
 
   return results;
 }
+
+pub fn eulerian_path(adjacent_lst: &Vec<Vec<usize>>) -> Vec<usize> {
+  let degree = compute_degree(adjacent_lst);
+  let mut start: usize = 0;
+  let mut end: usize = 0;
+  for (k, v) in degree {
+    if v[0] > v[1] {
+      start = k;
+    }
+
+    if v[0] < v[1] {
+      end = k;
+    }
+  }
+
+  return eulerian_cycle(&adjacent_lst, start);
+}
+
+#[derive(Debug)]
+pub struct Graph {
+  nodes: Vec<String>,
+  edges: Vec<Vec<usize>>,
+}
+
+impl Graph {
+  pub fn new(nodes: Vec<String>, edges: Vec<Vec<usize>>) -> Graph {
+    Graph {
+      nodes: nodes,
+      edges: edges,
+    }
+  }
+
+  pub fn get_edges(&self) -> Vec<Vec<usize>> {
+    return self.edges.clone();
+  }
+
+  pub fn get_nodes(&self) -> Vec<String> {
+    return self.nodes.clone();
+  }
+
+  pub fn output_text(&self, k: usize) -> String {
+    let path = eulerian_path(&self.edges);
+    let mut text = String::from(&self.nodes[path[0]][..]);
+
+    for i in 1..path.len() {
+      text += &self.nodes[path[i]][k - 2..];
+    }
+
+    return text;
+  }
+}
+
+pub fn de_bruijn_graph(patterns: &Vec<&str>, k: usize) -> Graph {
+  let mut nodes: Vec<String> = vec![];
+  let mut edges: Vec<Vec<usize>> = vec![];
+
+  let find_idx = |v: &Vec<String>, item: &str| -> i32 {
+    for (i, v) in v.iter().enumerate() {
+      if &v[..] == item {
+        return i as i32;
+      }
+    }
+
+    return -1;
+  };
+
+  let find_idx_in_adjacent_lst = |v: &Vec<Vec<usize>>, item: usize| -> i32 {
+    for (i, v) in v.iter().enumerate() {
+      if v[0] == item {
+        return i as i32;
+      }
+    }
+
+    return -1;
+  };
+
+  for &pattern in patterns {
+    let prefix = &pattern[0..k - 1];
+    let suffix = &pattern[1..];
+    let prefix_idx = find_idx(&nodes, prefix);
+    let suffix_idx = find_idx(&nodes, suffix);
+
+    if prefix_idx >= 0 {
+      if suffix_idx < 0 {
+        nodes.push(suffix.to_string());
+        edges.push(vec![prefix_idx as usize, nodes.len() - 1]);
+      } else {
+        let edge_idx = find_idx_in_adjacent_lst(&edges, prefix_idx as usize);
+        if edge_idx >= 0 {
+          edges[edge_idx as usize].push(suffix_idx as usize);
+        } else {
+          edges.push(vec![prefix_idx as usize, suffix_idx as usize]);
+        }
+      }
+    } else {
+      if suffix_idx < 0 {
+        nodes.push(prefix.to_string());
+        nodes.push(suffix.to_string());
+        let length = nodes.len();
+        edges.push(vec![length - 2, length - 1]);
+      } else {
+        nodes.push(prefix.to_string());
+        edges.push(vec![nodes.len() - 1, suffix_idx as usize]);
+      }
+    }
+  }
+
+  let graph = Graph::new(nodes, edges);
+  return graph;
+}

@@ -17,19 +17,6 @@ fn main() {
     vec![9, 6],
   ];
 
-  let degree = dna_replication::compute_degree(&adjacent_lst);
-  let mut start: usize = 0;
-  let mut end: usize = 0;
-  for (k, v) in degree {
-    if v[0] > v[1] {
-      start = k;
-    }
-
-    if v[0] < v[1] {
-      end = k;
-    }
-  }
-
-  let results = dna_replication::eulerian_cycle(&adjacent_lst, start);
+  let results = dna_replication::eulerian_path(&adjacent_lst);
   println!("{}", results.iter().map(|item| item.to_string()).collect::<Vec<String>>().join("->"));
 }

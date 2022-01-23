@@ -4,11 +4,7 @@ use bioinformatics_algorithms::bioinformatics::dna_replication;
 fn main() {
   // Expect:
   // ```
-  // AGG -> GGG
-  // CAG -> AGG,AGG
-  // GAG -> AGG
-  // GGA -> GAG
-  // GGG -> GGA,GGG
+  // 6->5->4->2->1->0->3->2->6->8->7->9
   // ```
   let adjacent_lst = vec![
     vec![0, 3],

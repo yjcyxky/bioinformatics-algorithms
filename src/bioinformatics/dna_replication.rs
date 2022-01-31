@@ -915,6 +915,21 @@ impl Graph {
 
     return text;
   }
+
+  pub fn output_paired_text(&self, k: usize, d: usize) -> String {
+    let path = eulerian_path(&self.edges);
+    let mut text1 = String::from(&self.nodes[path[0]][..k - 1]);
+    let mut text2 = String::from(&self.nodes[path[0]][k..]);
+
+    for i in 1..path.len() {
+      text1 += &self.nodes[path[i]][k - 2..k - 1];
+      text2 += &self.nodes[path[i]][2 * k - 2..];
+    }
+
+    let end = k + d;
+
+    return format!("{}{}", &text1[..end], text2);
+  }
 }
 
 pub fn de_bruijn_graph(patterns: &Vec<&str>, k: usize) -> Graph {
@@ -943,4 +958,22 @@ pub fn k_universal_cycle(k: usize) -> String {
   let patterns = gen_k_universal_patterns(k);
   let graph = de_bruijn_graph(&patterns.iter().map(|item| &item[..]).collect(), k);
   return graph.output_text(k);
+}
+
+pub fn read_pairs(patterns: &Vec<&str>, k: usize) -> Graph {
+  let mut graph = Graph::new();
+
+  for &pattern in patterns {
+    let read1 = &pattern[0..k];
+    let read2 = &pattern[k + 1..];
+    let read1_prefix = &read1[0..k - 1];
+    let read1_suffix = &read1[1..];
+    let read2_prefix = &read2[0..k - 1];
+    let read2_suffix = &read2[1..];
+    let prefix = format!("{}|{}", read1_prefix, read2_prefix);
+    let suffix = format!("{}|{}", read1_suffix, read2_suffix);
+    graph.add_edge(&prefix[..], &suffix[..]);
+  }
+
+  return graph;
 }
